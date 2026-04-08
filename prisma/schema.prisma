@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  username   String   @unique
+  email      String   @unique
+  password   String
+  fullName   String?
+  role       String   @default("USER")
+  isActive   Boolean  @default(true)
+  avatar     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  scans      ScannedUrl[]
+  logs       SystemLog[]
+  notifications Notification[]
+}
+
+model ScannedUrl {
+  id           String      @id @default(cuid())
+  originalUrl  String
+  domain       String
+  protocol     String      @default("https")
+  path         String?
+  queryParams  String?
+  status       String      @default("COMPLETED")
+  userId       String
+  user         User        @relation(fields: [userId], references: [id])
+  result       ScanResult?
+  features     UrlFeatures?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model UrlFeatures {
+  id              String  @id @default(cuid())
+  urlId           String  @unique
+  scannedUrl      ScannedUrl @relation(fields: [urlId], references: [id])
+  urlLength       Int
+  domainLength    Int
+  pathLength      Int     @default(0)
+  pathDepth       Int     @default(0)
+  numDots         Int     @default(0)
+  numHyphens      Int     @default(0)
+  numUnderscores  Int     @default(0)
+  numAtSymbols    Int     @default(0)
+  numSpecialChars Int     @default(0)
+  hasIpAddress    Boolean @default(false)
+  hasHttps        Boolean @default(true)
+  numSubdomains   Int     @default(1)
+  entropy         Float   @default(0.0)
+  numQueryParams  Int     @default(0)
+  hasSuspiciousWords Boolean @default(false)
+  numDigits       Int     @default(0)
+  numRedirects    Int     @default(0)
+}
+
+model ScanResult {
+  id              String   @id @default(cuid())
+  urlId           String   @unique
+  scannedUrl      ScannedUrl @relation(fields: [urlId], references: [id])
+  isMalicious     Boolean  @default(false)
+  threatType      String?
+  confidenceScore Float    @default(0.0)
+  riskLevel       String   @default("LOW")
+  details         String?
+  recommendations String?
+  processingTimeMs Int     @default(0)
+  siteAnalysis    String?
+  createdAt       DateTime @default(now())
+}
+
+model SystemLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  ipAddress String?
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  type      String   @default("IN_APP")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
