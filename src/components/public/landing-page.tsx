@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { Shield, Search, FileBarChart, ArrowRight, Zap, Brain, FileText, Globe, Cpu, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { EvaluationSection } from './evaluation-section'
 
 interface LandingPageProps {
   onNavigate: (view: 'login' | 'register') => void
@@ -24,6 +25,9 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
             </a>
             <a href="#how-it-works" className="text-sm text-slate-300 transition-colors hover:text-teal-400">
               How It Works
+            </a>
+            <a href="#evaluation" className="text-sm text-slate-300 transition-colors hover:text-teal-400">
+              Evaluation
             </a>
           </div>
           <div className="flex items-center gap-3">
@@ -221,6 +225,9 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
           </div>
         </motion.div>
       </section>
+
+      {/* Evaluation Section */}
+      <EvaluationSection />
 
       {/* CTA Section */}
       <section className="px-4 py-24 sm:px-6 lg:px-8">
