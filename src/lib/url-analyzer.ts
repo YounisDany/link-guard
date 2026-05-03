@@ -29,6 +29,7 @@ export interface AnalysisResult {
 
 // Known safe domains that get a score reduction
 const KNOWN_SAFE_DOMAINS = [
+  // ─── Global Tech & Social ───────────────────────────────────────────────────
   'google.com', 'github.com', 'stackoverflow.com', 'microsoft.com',
   'apple.com', 'amazon.com', 'facebook.com', 'twitter.com', 'x.com',
   'linkedin.com', 'youtube.com', 'wikipedia.org', 'reddit.com',
@@ -36,6 +37,119 @@ const KNOWN_SAFE_DOMAINS = [
   'docs.google.com', 'mail.google.com', 'drive.google.com',
   'developer.mozilla.org', 'npmjs.com', 'pypi.org',
   'cloudflare.com', 'vercel.com', 'nextjs.org', 'react.dev',
+  'instagram.com', 'tiktok.com', 'snapchat.com', 'whatsapp.com',
+  'zoom.us', 'teams.microsoft.com', 'office.com', 'outlook.com',
+  'adobe.com', 'salesforce.com', 'oracle.com', 'ibm.com',
+  'samsung.com', 'huawei.com', 'dell.com', 'hp.com',
+
+  // ─── Saudi Government (.gov.sa) ─────────────────────────────────────────────
+  'gov.sa',
+  'my.gov.sa',           // بوابة النفاذ الوطني
+  'absher.sa',           // أبشر
+  'moi.gov.sa',          // وزارة الداخلية
+  'moe.gov.sa',          // وزارة التعليم
+  'moh.gov.sa',          // وزارة الصحة
+  'mof.gov.sa',          // وزارة المالية
+  'mcit.gov.sa',         // وزارة الاتصالات
+  'modon.gov.sa',        // الهيئة السعودية للمدن الصناعية
+  'mhrsd.gov.sa',        // وزارة الموارد البشرية
+  'moj.gov.sa',          // وزارة العدل
+  'mewa.gov.sa',         // وزارة البيئة والمياه والزراعة
+  'mom.gov.sa',          // وزارة التجارة
+  'musaned.com.sa',      // مساند
+  'hrsd.gov.sa',         // وزارة الموارد البشرية
+  'mol.gov.sa',          // وزارة العمل (القديم)
+  'customs.gov.sa',      // الجمارك السعودية
+  'zatca.gov.sa',        // هيئة الزكاة والضريبة والجمارك
+  'gazt.gov.sa',         // هيئة الزكاة (القديم)
+  'sama.gov.sa',         // البنك المركزي السعودي
+  'cma.org.sa',          // هيئة السوق المالية
+  'saudiexchanges.com',  // تداول
+  'tadawul.com.sa',      // تداول
+  'vision2030.gov.sa',   // رؤية 2030
+  'neom.com',            // نيوم
+  'spa.gov.sa',          // وكالة الأنباء السعودية
+  'stats.gov.sa',        // الهيئة العامة للإحصاء
+  'sdaia.gov.sa',        // هيئة البيانات والذكاء الاصطناعي
+  'stc.com.sa',          // STC
+  'mobily.com.sa',       // موبايلي
+  'zain.com.sa',         // زين السعودية
+  'saptco.com.sa',       // سابتكو
+  'haramain.info',       // قطار الحرمين
+  'pnu.edu.sa',          // جامعة الأميرة نورة
+  'saudiairlines.com',   // الخطوط السعودية
+  'saudia.com',          // الخطوط السعودية
+
+  // ─── Saudi Universities (.edu.sa) ────────────────────────────────────────────
+  'edu.sa',
+  'ksu.edu.sa',          // جامعة الملك سعود
+  'kau.edu.sa',          // جامعة الملك عبدالعزيز
+  'kfupm.edu.sa',        // جامعة الملك فهد للبترول والمعادن
+  'ksau-hs.edu.sa',      // جامعة الملك سعود للعلوم الصحية
+  'kku.edu.sa',          // جامعة الملك خالد
+  'qu.edu.sa',           // جامعة القصيم
+  'hu.edu.sa',           // جامعة حائل
+  'iau.edu.sa',          // جامعة الإمام عبدالرحمن بن فيصل
+  'imamu.edu.sa',        // جامعة الإمام محمد بن سعود
+  'taibahu.edu.sa',      // جامعة طيبة
+  'umu.edu.sa',          // جامعة أم القرى
+  'uqu.edu.sa',          // جامعة أم القرى (نطاق قديم)
+  'tu.edu.sa',           // جامعة الطائف
+  'ju.edu.sa',           // جامعة جازان
+  'nu.edu.sa',           // جامعة نجران
+  'bu.edu.sa',           // جامعة الباحة
+  'tbu.edu.sa',          // جامعة تبوك
+  'hou.edu.sa',          // جامعة الحدود الشمالية
+  'seu.edu.sa',          // جامعة الشرقية
+  'uoh.edu.sa',          // جامعة الأمير سطام
+  'psau.edu.sa',         // جامعة الأمير سطام بن عبدالعزيز
+  'kfmc.med.sa',         // المركز الطبي الملكي
+  'ksu.edu.sa',          // جامعة الملك سعود
+  'alfaisal.edu',        // جامعة الفيصل
+  'pmu.edu.sa',          // جامعة الأمير محمد بن فهد
+  'agu.edu.sa',          // جامعة الخليج العربي
+  'effatuniversity.edu.sa', // جامعة عفت
+  'su.edu.sa',           // جامعة سعود الطبية
+
+  // ─── Saudi Banks & Finance ───────────────────────────────────────────────────
+  'alrajhibank.com.sa',  // مصرف الراجحي
+  'alrajhi.com',
+  'alinma.com',          // مصرف الإنماء
+  'albiladbank.com',     // بنك البلاد
+  'riyadbank.com',       // بنك الرياض
+  'samba.com',           // سامبا
+  'anb.com.sa',          // البنك العربي الوطني
+  'saib.com.sa',         // البنك السعودي للاستثمار
+  'bsf.com.sa',          // البنك السعودي الفرنسي
+  'alawwal.com',         // بنك الأول
+  'ncb.com.sa',          // البنك الأهلي
+  'alahlionline.com',    // البنك الأهلي
+  'stcpay.com.sa',       // STC Pay
+  'stcpay.com',
+
+  // ─── Saudi News & Media ──────────────────────────────────────────────────────
+  'alarabiya.net',       // العربية
+  'aljazeera.net',       // الجزيرة
+  'sabq.org',            // صحيفة سبق
+  'okaz.com.sa',         // صحيفة عكاظ
+  'alyaum.com',          // صحيفة اليوم
+  'aleqt.com',           // صحيفة الاقتصادية
+  'alsharq.com.sa',      // صحيفة الشرق
+  'asharqnews.com',      // الشرق للأخبار
+  'bbc.com',             // BBC
+  'cnn.com',             // CNN
+
+  // ─── Saudi E-commerce & Services ─────────────────────────────────────────────
+  'noon.com',            // نون
+  'namshi.com',          // نمشي
+  'jarir.com',           // مكتبة جرير
+  'extra.com.sa',        // إكسترا
+  'panda.com.sa',        // بنده
+  'careem.com',          // كريم
+  'uber.com',            // أوبر
+  'hungerstation.com',   // هنقرستيشن
+  'jahez.com',           // جاهز
+  'mrsool.co',           // مرسول
 ];
 
 const SUSPICIOUS_KEYWORDS = [
@@ -257,7 +371,7 @@ function calculateRiskScore(
     threatTypes.push('Redirect abuse');
   }
 
-  // Known safe domain reduction
+  // Known safe domain check (Saudi + Global)
   let parsedHostname: string;
   try {
     parsedHostname = new URL(fullUrl).hostname.replace(/^www\./, '');
@@ -265,13 +379,38 @@ function calculateRiskScore(
     parsedHostname = '';
   }
 
+  // Any .sa TLD (gov.sa, edu.sa, com.sa, net.sa, org.sa, etc.)
+  const isSaudiDomain =
+    parsedHostname.endsWith('.sa') ||
+    parsedHostname === 'absher.sa';
+
   const isKnownSafe = KNOWN_SAFE_DOMAINS.some(
     (safeDomain) => parsedHostname === safeDomain || parsedHostname.endsWith('.' + safeDomain)
   );
 
-  if (isKnownSafe && score > 0) {
-    score = Math.max(0, score - 30);
-    details.push('Domain belongs to a known safe/trusted provider (score reduced)');
+  if (isSaudiDomain || isKnownSafe) {
+    // Force score to 0 — fully trusted, no threats
+    score = 0;
+    details.length = 0;
+    threatTypes.length = 0;
+    recommendations.length = 0;
+
+    if (isSaudiDomain) {
+      details.push('✅ Saudi domain (.sa) — verified trusted domain');
+      if (parsedHostname.endsWith('.gov.sa')) {
+        details.push('✅ Official Saudi Government website');
+      } else if (parsedHostname.endsWith('.edu.sa')) {
+        details.push('✅ Saudi University / Educational institution');
+      } else if (parsedHostname.endsWith('.com.sa') || parsedHostname.endsWith('.net.sa')) {
+        details.push('✅ Registered Saudi commercial/service domain');
+      } else if (parsedHostname.endsWith('.org.sa')) {
+        details.push('✅ Registered Saudi organization domain');
+      }
+    } else {
+      details.push('✅ Domain belongs to a globally trusted and well-known provider');
+    }
+
+    recommendations.push('This URL is safe to visit. No threats detected.');
   }
 
   // Determine threat type
