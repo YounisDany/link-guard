@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifySession } from '@/lib/auth';
-import { analyzeUrl } from '@/lib/url-analyzer';
+import { analyzeUrl, getTrustedDomainInfo } from '@/lib/url-analyzer';
 import { analyzeSite, SiteAnalysis } from '@/lib/site-analyzer';
 
 export async function POST(request: NextRequest) {
@@ -43,6 +43,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Trusted-source check is deterministic from URL — derive once, reuse for both cache and fresh paths.
+    const trustedInfo = getTrustedDomainInfo(trimmedUrl);
+    const trustedSource = trustedInfo.trusted
+      ? {
+          type: trustedInfo.type as string,
+          matchedDomain: trustedInfo.matchedDomain as string,
+          label: trustedInfo.label as string,
+        }
+      : null;
+
     if (existingScan && existingScan.result) {
       // Parse siteAnalysis from cached result
       let siteAnalysis: SiteAnalysis | null = null;
@@ -54,6 +64,12 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // For trusted domains, force the cached verdict to safe (the cache may pre-date the trust check).
+      const cachedIsMalicious = trustedSource ? false : existingScan.result.isMalicious;
+      const cachedThreatType = trustedSource ? null : existingScan.result.threatType;
+      const cachedConfidenceScore = trustedSource ? 0 : existingScan.result.confidenceScore;
+      const cachedRiskLevel = trustedSource ? 'LOW' : existingScan.result.riskLevel;
+
       return NextResponse.json({
         success: true,
         result: {
@@ -62,10 +78,10 @@ export async function POST(request: NextRequest) {
           domain: existingScan.domain,
           status: existingScan.status,
           createdAt: existingScan.createdAt,
-          isMalicious: existingScan.result.isMalicious,
-          threatType: existingScan.result.threatType,
-          confidenceScore: existingScan.result.confidenceScore,
-          riskLevel: existingScan.result.riskLevel,
+          isMalicious: cachedIsMalicious,
+          threatType: cachedThreatType,
+          confidenceScore: cachedConfidenceScore,
+          riskLevel: cachedRiskLevel,
           details: existingScan.result.details ? JSON.parse(existingScan.result.details) : [],
           recommendations: existingScan.result.recommendations ? JSON.parse(existingScan.result.recommendations) : [],
           features: existingScan.features
@@ -90,7 +106,8 @@ export async function POST(request: NextRequest) {
               }
             : null,
           processingTimeMs: existingScan.result.processingTimeMs,
-          siteAnalysis,
+          siteAnalysis: trustedSource ? null : siteAnalysis,
+          trustedSource,
         },
         cached: true,
       });
@@ -99,12 +116,15 @@ export async function POST(request: NextRequest) {
     // Step 1: Run URL heuristic analysis
     const analysisResult = analyzeUrl(trimmedUrl);
 
-    // Step 2: Run deep site analysis
+    // Step 2: Run deep site analysis — skipped entirely for trusted domains
+    // (forces 100% safe verdict, avoids unnecessary outbound fetch).
     let siteAnalysis: SiteAnalysis | null = null;
-    try {
-      siteAnalysis = await analyzeSite(trimmedUrl);
-    } catch (err) {
-      console.error('Site analysis failed, continuing with URL-only analysis:', err);
+    if (!trustedSource) {
+      try {
+        siteAnalysis = await analyzeSite(trimmedUrl);
+      } catch (err) {
+        console.error('Site analysis failed, continuing with URL-only analysis:', err);
+      }
     }
 
     // Determine final risk level and malicious status using enhanced data if available
@@ -140,6 +160,14 @@ export async function POST(request: NextRequest) {
         ...analysisResult.recommendations,
         ...siteAnalysis.recommendations,
       ];
+    }
+
+    // Trusted domains: hard-pin the final verdict to safe regardless of any other signals.
+    if (trustedSource) {
+      finalRiskLevel = 'LOW';
+      finalIsMalicious = false;
+      finalConfidenceScore = 0;
+      finalThreatType = null;
     }
 
     // Extract domain and path info for storage
@@ -234,6 +262,7 @@ export async function POST(request: NextRequest) {
         features: analysisResult.features,
         processingTimeMs: analysisResult.processingTimeMs,
         siteAnalysis,
+        trustedSource,
       },
       cached: false,
     });

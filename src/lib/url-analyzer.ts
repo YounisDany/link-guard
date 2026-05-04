@@ -150,7 +150,113 @@ const KNOWN_SAFE_DOMAINS = [
   'hungerstation.com',   // هنقرستيشن
   'jahez.com',           // جاهز
   'mrsool.co',           // مرسول
+
+  // ─── Global Tech & AI (Extended) ─────────────────────────────────────────────
+  'openai.com',          // OpenAI
+  'chatgpt.com',         // ChatGPT
+  'anthropic.com',       // Anthropic
+  'claude.ai',           // Claude
+  'bing.com',            // Bing
+  'duckduckgo.com',      // DuckDuckGo
+  'yahoo.com',           // Yahoo
+  'telegram.org',        // Telegram
+  't.me',                // Telegram links
+  'discord.com',         // Discord
+  'twitch.tv',           // Twitch
+  'steampowered.com',    // Steam
+  'pinterest.com',       // Pinterest
+  'quora.com',           // Quora
+  'medium.com',          // Medium
+  'gitlab.com',          // GitLab
+  'bitbucket.org',       // Bitbucket
+  'notion.so',           // Notion
+  'figma.com',           // Figma
+  'canva.com',           // Canva
+  'wordpress.com',       // WordPress.com
+  'wordpress.org',       // WordPress.org
+
+  // ─── Gulf & Arab Region (Notable Domains) ────────────────────────────────────
+  'etisalat.ae',         // اتصالات الإمارات
+  'du.ae',               // دو
+  'emirates.com',        // طيران الإمارات
+  'qatarairways.com',    // الخطوط القطرية
+  'ooredoo.qa',          // Ooredoo قطر
+  'zain.com',            // زين (المجموعة)
+  'batelco.com',         // بتلكو البحرين
+  'omantel.om',          // عمانتل
+  'gov.eg',              // حكومة مصر
+  'edu.eg',              // تعليم مصر
+  'egyptair.com',        // مصر للطيران
+
+  // ─── Global Financial Services ───────────────────────────────────────────────
+  // ⚠️ Exact-domain match only — phishing lookalikes (paypal-secure.tk) won't match.
+  'paypal.com',          // PayPal
+  'stripe.com',          // Stripe
+  'visa.com',            // Visa
+  'mastercard.com',      // Mastercard
+  'wise.com',            // Wise
+  'americanexpress.com', // American Express
+  'westernunion.com',    // Western Union
 ];
+
+// Gulf TLDs treated as inherently trusted (regulated registries).
+const GULF_TRUSTED_TLDS = ['.sa', '.ae', '.qa', '.kw', '.bh', '.om'] as const;
+
+export type TrustedSourceType =
+  | 'saudi-gov'
+  | 'saudi-edu'
+  | 'saudi-com'
+  | 'saudi-org'
+  | 'saudi-other'
+  | 'gulf'
+  | 'global';
+
+export interface TrustedDomainInfo {
+  trusted: boolean;
+  type: TrustedSourceType | null;
+  matchedDomain: string | null;
+  label: string | null;
+}
+
+export function getTrustedDomainInfo(url: string): TrustedDomainInfo {
+  let host: string;
+  try {
+    host = new URL(url).hostname.replace(/^www\./, '').toLowerCase();
+  } catch {
+    return { trusted: false, type: null, matchedDomain: null, label: null };
+  }
+
+  if (host.endsWith('.sa')) {
+    if (host.endsWith('.gov.sa')) {
+      return { trusted: true, type: 'saudi-gov', matchedDomain: host, label: '✅ موقع حكومي سعودي رسمي' };
+    }
+    if (host.endsWith('.edu.sa')) {
+      return { trusted: true, type: 'saudi-edu', matchedDomain: host, label: '✅ جامعة / مؤسسة تعليمية سعودية' };
+    }
+    if (host.endsWith('.com.sa') || host.endsWith('.net.sa')) {
+      return { trusted: true, type: 'saudi-com', matchedDomain: host, label: '✅ موقع تجاري سعودي مسجّل' };
+    }
+    if (host.endsWith('.org.sa')) {
+      return { trusted: true, type: 'saudi-org', matchedDomain: host, label: '✅ منظمة سعودية مسجّلة' };
+    }
+    return { trusted: true, type: 'saudi-other', matchedDomain: host, label: '✅ نطاق سعودي (.sa) موثوق' };
+  }
+
+  for (const tld of GULF_TRUSTED_TLDS) {
+    if (tld !== '.sa' && host.endsWith(tld)) {
+      return { trusted: true, type: 'gulf', matchedDomain: host, label: `✅ نطاق خليجي موثوق (${tld})` };
+    }
+  }
+
+  const matched = KNOWN_SAFE_DOMAINS.find(
+    (d) => host === d || host.endsWith('.' + d),
+  );
+  if (matched) {
+    return { trusted: true, type: 'global', matchedDomain: matched, label: '✅ موقع عالمي موثوق' };
+  }
+
+  return { trusted: false, type: null, matchedDomain: null, label: null };
+}
 
 const SUSPICIOUS_KEYWORDS = [
   'login', 'account', 'verify', 'secure', 'update', 'banking',
@@ -371,46 +477,16 @@ function calculateRiskScore(
     threatTypes.push('Redirect abuse');
   }
 
-  // Known safe domain check (Saudi + Global)
-  let parsedHostname: string;
-  try {
-    parsedHostname = new URL(fullUrl).hostname.replace(/^www\./, '');
-  } catch {
-    parsedHostname = '';
-  }
-
-  // Any .sa TLD (gov.sa, edu.sa, com.sa, net.sa, org.sa, etc.)
-  const isSaudiDomain =
-    parsedHostname.endsWith('.sa') ||
-    parsedHostname === 'absher.sa';
-
-  const isKnownSafe = KNOWN_SAFE_DOMAINS.some(
-    (safeDomain) => parsedHostname === safeDomain || parsedHostname.endsWith('.' + safeDomain)
-  );
-
-  if (isSaudiDomain || isKnownSafe) {
-    // Force score to 0 — fully trusted, no threats
+  // Known safe domain check (Saudi + Gulf + Global) — short-circuits to 0.
+  const trust = getTrustedDomainInfo(fullUrl);
+  if (trust.trusted) {
     score = 0;
     details.length = 0;
     threatTypes.length = 0;
     recommendations.length = 0;
 
-    if (isSaudiDomain) {
-      details.push('✅ Saudi domain (.sa) — verified trusted domain');
-      if (parsedHostname.endsWith('.gov.sa')) {
-        details.push('✅ Official Saudi Government website');
-      } else if (parsedHostname.endsWith('.edu.sa')) {
-        details.push('✅ Saudi University / Educational institution');
-      } else if (parsedHostname.endsWith('.com.sa') || parsedHostname.endsWith('.net.sa')) {
-        details.push('✅ Registered Saudi commercial/service domain');
-      } else if (parsedHostname.endsWith('.org.sa')) {
-        details.push('✅ Registered Saudi organization domain');
-      }
-    } else {
-      details.push('✅ Domain belongs to a globally trusted and well-known provider');
-    }
-
-    recommendations.push('This URL is safe to visit. No threats detected.');
+    if (trust.label) details.push(trust.label);
+    recommendations.push('هذا الرابط ضمن قائمة المصادر الموثوقة — آمن للزيارة 100%.');
   }
 
   // Determine threat type

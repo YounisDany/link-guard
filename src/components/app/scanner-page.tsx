@@ -38,6 +38,7 @@ import {
   Tag,
   AlertOctagon,
   Bug,
+  BadgeCheck,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -67,6 +68,11 @@ interface ScanResult {
   processingTimeMs: number
   cached: boolean
   siteAnalysis: SiteAnalysis | null
+  trustedSource?: {
+    type: string
+    matchedDomain: string
+    label: string
+  } | null
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -286,6 +292,34 @@ function RiskGauge({ score, riskLevel }: { score: number; riskLevel: string }) {
         {riskLevel}
       </Badge>
     </div>
+  )
+}
+
+function TrustedSourceBadge({
+  source,
+}: {
+  source: NonNullable<ScanResult['trustedSource']>
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-center gap-4 rounded-xl border-2 border-emerald-300 bg-emerald-50 p-5"
+      dir="rtl"
+    >
+      <div className="rounded-full bg-emerald-100 p-3">
+        <BadgeCheck className="h-8 w-8 text-emerald-600" />
+      </div>
+      <div className="flex-1">
+        <h3 className="text-lg font-bold text-emerald-700">{source.label}</h3>
+        <p className="mt-1 text-sm text-emerald-600">
+          هذا الرابط ضمن قائمة المصادر الموثوقة — آمن للزيارة 100%.
+        </p>
+        <p className="mt-1 font-mono text-xs text-emerald-500/80">
+          {source.matchedDomain}
+        </p>
+      </div>
+    </motion.div>
   )
 }
 
@@ -1338,6 +1372,9 @@ export function ScannerPage() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
+            {/* Trusted Source Badge (shown only for trusted Saudi/Gulf/global domains) */}
+            {result.trustedSource && <TrustedSourceBadge source={result.trustedSource} />}
+
             {/* Result Banner */}
             <ResultBanner riskLevel={result.riskLevel} confidenceScore={result.confidenceScore} />
 
